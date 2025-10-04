@@ -1,0 +1,7 @@
+print("[DEBUG] Fetching Main.txt...")
+art_content = fetch_text(ART_URL)
+print("[DEBUG] Main.txt fetched:", bool(art_content))
+
+print("[DEBUG] Fetching TestPaste.json...")
+trigger_data = fetch_json(TRIGGER_URL)
+print("[DEBUG] TestPaste.json fetched:", trigger_data)
