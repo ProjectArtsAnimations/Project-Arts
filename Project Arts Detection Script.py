@@ -1,14 +1,17 @@
-# Project Arts Detection Script
 import time
 import requests
 import hashlib
 import json
+from datetime import datetime
 
-# URLs
-ART_URL = "https://raw.githubusercontent.com/ProjectArtsAnimations/Project-Arts/refs/heads/main/Main.txt"
-TRIGGER_URL = "https://raw.githubusercontent.com/ProjectArtsAnimations/Project-Arts/refs/heads/main/TestPaste.json"
+# Correct raw GitHub URLs
+ART_URL = "https://raw.githubusercontent.com/ProjectArtsAnimations/Project-Arts/main/Main.txt"
+TRIGGER_URL = "https://raw.githubusercontent.com/ProjectArtsAnimations/Project-Arts/main/TestPaste.json"
 
-# Time interval for checking (in seconds)
+# Log file (in same folder)
+LOG_FILE = "Project Arts Logs.txt"
+
+# Check interval in seconds
 CHECK_INTERVAL = 10
 
 def fetch_text(url):
@@ -35,46 +38,52 @@ def fetch_json(url):
         return None
 
 def hash_text(text):
-    """Return MD5 hash of text for change detection."""
     return hashlib.md5(text.encode("utf-8")).hexdigest()
 
 def print_ascii_art(art_content):
-    """Print ASCII art to console."""
     print("\n" + art_content + "\n")
 
-def monitor_art_and_trigger():
-    """Monitor both Main.txt and TestPaste.json for changes."""
+def log_ascii_art(art_content):
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    with open(LOG_FILE, "a", encoding="utf-8") as f:
+        f.write(f"--- {timestamp} ---\n")
+        f.write(art_content + "\n\n")
+
+def monitor_and_log():
+    print("[INFO] Starting Project Arts Live Logging...")
     last_art_hash = None
     last_trigger_hash = None
 
     while True:
         # Fetch ASCII art
+        print("[DEBUG] Fetching Main.txt...")
         art_content = fetch_text(ART_URL)
-        if art_content is None:
-            print("[WARNING] Failed to fetch Main.txt. Retrying...")
-        else:
+        if art_content:
             current_art_hash = hash_text(art_content)
             if current_art_hash != last_art_hash:
-                print("[UPDATE] Change detected in Main.txt!")
+                print("[UPDATE] Main.txt changed! Printing and logging ASCII art...")
                 print_ascii_art(art_content)
+                log_ascii_art(art_content)
                 last_art_hash = current_art_hash
+        else:
+            print("[DEBUG] Failed to fetch Main.txt.")
 
         # Fetch JSON trigger
+        print("[DEBUG] Fetching TestPaste.json...")
         trigger_data = fetch_json(TRIGGER_URL)
-        if trigger_data is None:
-            print("[WARNING] Failed to fetch TestPaste.json. Retrying...")
-        else:
+        if trigger_data:
             trigger_str = json.dumps(trigger_data, sort_keys=True)
             current_trigger_hash = hash_text(trigger_str)
             if current_trigger_hash != last_trigger_hash:
-                print("[UPDATE] Change detected in TestPaste.json!")
-                # Optional: Could also print trigger content or just refresh art
+                print("[UPDATE] TestPaste.json changed! Logging ASCII art again...")
                 if art_content:
                     print_ascii_art(art_content)
+                    log_ascii_art(art_content)
                 last_trigger_hash = current_trigger_hash
+        else:
+            print("[DEBUG] Failed to fetch TestPaste.json.")
 
         time.sleep(CHECK_INTERVAL)
 
 if __name__ == "__main__":
-    print("[INFO] Starting Project Art Detection...")
-    monitor_art_and_trigger()
+    monitor_and_log()
