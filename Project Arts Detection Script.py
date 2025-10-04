@@ -4,18 +4,12 @@ import hashlib
 import json
 from datetime import datetime
 
-# Correct raw GitHub URLs
 ART_URL = "https://raw.githubusercontent.com/ProjectArtsAnimations/Project-Arts/main/Main.txt"
 TRIGGER_URL = "https://raw.githubusercontent.com/ProjectArtsAnimations/Project-Arts/main/TestPaste.json"
-
-# Log file (in same folder)
 LOG_FILE = "Project Arts Logs.txt"
-
-# Check interval in seconds
 CHECK_INTERVAL = 10
 
 def fetch_text(url):
-    """Fetch plain text from a URL."""
     try:
         response = requests.get(url, timeout=10)
         response.raise_for_status()
@@ -25,7 +19,6 @@ def fetch_text(url):
         return None
 
 def fetch_json(url):
-    """Fetch JSON data from a URL."""
     try:
         response = requests.get(url, timeout=10)
         response.raise_for_status()
@@ -56,12 +49,11 @@ def monitor_and_log():
 
     while True:
         # Fetch ASCII art
-        print("[DEBUG] Fetching Main.txt...")
         art_content = fetch_text(ART_URL)
         if art_content:
             current_art_hash = hash_text(art_content)
-            if current_art_hash != last_art_hash:
-                print("[UPDATE] Main.txt changed! Printing and logging ASCII art...")
+            if last_art_hash is None or current_art_hash != last_art_hash:
+                print("[UPDATE] Main.txt detected!")
                 print_ascii_art(art_content)
                 log_ascii_art(art_content)
                 last_art_hash = current_art_hash
@@ -69,13 +61,12 @@ def monitor_and_log():
             print("[DEBUG] Failed to fetch Main.txt.")
 
         # Fetch JSON trigger
-        print("[DEBUG] Fetching TestPaste.json...")
         trigger_data = fetch_json(TRIGGER_URL)
         if trigger_data:
             trigger_str = json.dumps(trigger_data, sort_keys=True)
             current_trigger_hash = hash_text(trigger_str)
-            if current_trigger_hash != last_trigger_hash:
-                print("[UPDATE] TestPaste.json changed! Logging ASCII art again...")
+            if last_trigger_hash is None or current_trigger_hash != last_trigger_hash:
+                print("[UPDATE] TestPaste.json changed!")
                 if art_content:
                     print_ascii_art(art_content)
                     log_ascii_art(art_content)
